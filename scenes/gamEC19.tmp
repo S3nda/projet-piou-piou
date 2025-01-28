@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://ck0bgrodoma5e"]
+
+[ext_resource type="Script" path="res://scenes/BulletManager.gd" id="1_b0stt"]
+[ext_resource type="PackedScene" uid="uid://kt7hr4154ku5" path="res://objs/player.tscn" id="1_w2l72"]
+
+[node name="Game" type="Node2D"]
+script = ExtResource("1_b0stt")
+
+[node name="spaceship" parent="." instance=ExtResource("1_w2l72")]
+position = Vector2(576, 324)
+speed = 300
+deceleration = 20
+acceleration = 30
+rotation_speed = 5
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(576, 324)
+zoom = Vector2(3.135, 3.135)
