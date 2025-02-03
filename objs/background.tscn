@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://di7ag87bofxm0"]
+
+[ext_resource type="Texture2D" uid="uid://pemjt3ckirx8" path="res://assets/bg/sky.jpg" id="1_jwgah"]
+
+[node name="Background" type="Parallax2D"]
+repeat_size = Vector2(3.795, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(578, 323)
+scale = Vector2(2.26807, 1.28174)
+texture = ExtResource("1_jwgah")
