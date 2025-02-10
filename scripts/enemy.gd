@@ -23,6 +23,7 @@ var can_shoot: bool = true  ## Controls firing cooldown
 ## Node references
 @onready var gun: Marker2D = $Gun  ## Position where bullets spawn
 @onready var gundir: Marker2D = $GunDir  ## Direction the bullets should follow
+@onready var player: Node2D = $spaceship
 
 ## Called every physics frame to update movement and check collisions
 func _physics_process(delta: float) -> void:
@@ -55,9 +56,15 @@ func _physics_process(delta: float) -> void:
 ## Handles collision events
 func _handle_collision(collision: KinematicCollision2D) -> void:
 	var collider: Object = collision.get_collider()
-	if collider and collider.is_in_group("player_bullets"):
+	if !collider:
+		return
+	if collider.is_in_group("player_bullets"):
 		print("Hit by player bullet: ", collider.name)
 		collider.queue_free()
+		die()
+	if collider.name == "spaceship":
+		print("Hit by player")
+		collider.die()
 		die()
 
 ## Handles the enemy shooting logic
