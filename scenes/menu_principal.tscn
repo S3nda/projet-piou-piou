@@ -1,0 +1,85 @@
+[gd_scene load_steps=5 format=3 uid="uid://cohw8uxlrj5rv"]
+
+[ext_resource type="Script" path="res://play.gd" id="2_q2fs4"]
+
+[sub_resource type="Gradient" id="Gradient_ttu5b"]
+colors = PackedColorArray(0, 0, 0.933333, 1, 0.301961, 1, 1, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_8e4ch"]
+gradient = SubResource("Gradient_ttu5b")
+
+[sub_resource type="LabelSettings" id="LabelSettings_e7iml"]
+font_size = 60
+
+[node name="Menu Principal" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 66.0
+offset_top = -214.0
+offset_right = -321.0
+offset_bottom = -395.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("GradientTexture1D_8e4ch")
+
+[node name="Label" type="Label" parent="Background"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -251.0
+offset_top = 313.0
+offset_right = 251.0
+offset_bottom = 396.0
+grow_horizontal = 2
+text = "MENU PRINCIPAL"
+label_settings = SubResource("LabelSettings_e7iml")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -166.5
+offset_top = 49.5
+offset_right = 166.5
+offset_bottom = 184.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="PLAY" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "PL	AY
+"
+script = ExtResource("2_q2fs4")
+
+[node name="OPTIONS" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "OPTIONS
+"
+
+[node name="QUIT" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "QUIT"
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(962, 368)
+scale = Vector2(-1.89952, -0.880598)
+
+[connection signal="button_down" from="VBoxContainer/PLAY" to="." method="_on_play_button_down"]
+[connection signal="pressed" from="VBoxContainer/PLAY" to="." method="_on_play_pressed"]
+[connection signal="pressed" from="VBoxContainer/PLAY" to="VBoxContainer/PLAY" method="_on_pressed"]
+[connection signal="pressed" from="VBoxContainer/QUIT" to="." method="_on_quit_pressed"]
