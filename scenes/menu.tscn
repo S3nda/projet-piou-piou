@@ -1,10 +1,11 @@
-[gd_scene load_steps=2 format=3 uid="uid://b6i42iugmokvo"]
+[gd_scene load_steps=2 format=3 uid="uid://ba3egyuafdh1v"]
 
-[ext_resource type="Script" path="res://scripts/menu.gd" id="1_qdubu"]
+[ext_resource type="Script" path="res://scenes/pausemenu.gd" id="1_8xlxn"]
 
 [node name="menu" type="Node2D"]
-script = ExtResource("1_qdubu")
+script = ExtResource("1_8xlxn")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 
 [node name="Camera2D" type="Camera2D" parent="."]
+script = ExtResource("1_8xlxn")

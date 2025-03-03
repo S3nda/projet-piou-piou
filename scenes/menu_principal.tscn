@@ -1,6 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://cohw8uxlrj5rv"]
+[gd_scene load_steps=8 format=3 uid="uid://cohw8uxlrj5rv"]
 
+[ext_resource type="Script" path="res://scenes/menu_principal.gd" id="1_52f8o"]
 [ext_resource type="Script" path="res://play.gd" id="2_q2fs4"]
+[ext_resource type="Script" path="res://scripts/node_2d.gd" id="3_umiv0"]
+[ext_resource type="Script" path="res://scripts/label_monnaie.gd" id="4_p8naf"]
 
 [sub_resource type="Gradient" id="Gradient_ttu5b"]
 colors = PackedColorArray(0, 0, 0.933333, 1, 0.301961, 1, 1, 1)
@@ -22,12 +25,17 @@ offset_right = -321.0
 offset_bottom = -395.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_52f8o")
 
 [node name="Background" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -290.0
+offset_right = 520.0
+offset_bottom = 38.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = SubResource("GradientTexture1D_8e4ch")
@@ -52,10 +60,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -166.5
-offset_top = 49.5
-offset_right = 166.5
-offset_bottom = 184.5
+offset_left = -0.5
+offset_top = -82.5
+offset_right = 332.5
+offset_bottom = 52.5
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 20
@@ -78,6 +86,14 @@ text = "QUIT"
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(962, 368)
 scale = Vector2(-1.89952, -0.880598)
+
+[node name="Node2D" type="Node2D" parent="."]
+script = ExtResource("3_umiv0")
+
+[node name="Label_Monnaie" type="Label" parent="Node2D"]
+offset_right = 40.0
+offset_bottom = 23.0
+script = ExtResource("4_p8naf")
 
 [connection signal="button_down" from="VBoxContainer/PLAY" to="." method="_on_play_button_down"]
 [connection signal="pressed" from="VBoxContainer/PLAY" to="." method="_on_play_pressed"]
