@@ -1,7 +1,7 @@
 import pygame
 import os
 import math
-from phase1.utils import vec_length, vec_normalize, vec_add, vec_scale
+from phase2.utils import vec_length, vec_normalize, vec_add, vec_scale
 
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), '..', 'assets')
 
