@@ -4,7 +4,7 @@ from phase2.planet import Planet
 from phase2.target import Target
 import random
 
-class Phase1:
+class Phase2:
     def __init__(self, screen):
         self.screen = screen
         self.width, self.height = screen.get_size()
