@@ -44,7 +44,7 @@ class Phase1:
                 self.player.win_animation()
                 pygame.display.flip()
                 pygame.time.wait(1500)
-                return "phase2"
+                return "phase1"
 
             # Collision planète
             if any(planet.collides_with(self.player) for planet in self.planets):
