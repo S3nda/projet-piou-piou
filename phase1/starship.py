@@ -1,0 +1,73 @@
+import pygame
+import os
+import math
+
+ASSETS_DIR = os.path.join(os.path.dirname(__file__), "..", "assets")
+DEBUG = True
+
+
+class Starship(pygame.sprite.Sprite):
+    def __init__(
+        self, x, y, screen, image_path: str, fire_rate: int, direction: pygame.Vector2
+    ):
+        super().__init__()
+
+        self.pos = pygame.Vector2(x, y)
+        self.velocity = pygame.Vector2(0, 0)
+
+        self.hp = 1
+        self.bullets = pygame.sprite.Group()
+        self.bullet_x = self.pos.x
+        self.bullet_y = self.pos.y
+
+        self.direction = direction
+
+        if self.direction.length_squared() != 0:
+            self.direction = self.direction.normalize()
+
+        self.original_image = pygame.image.load(image_path).convert_alpha()
+        self.image = self.rotate_image(self.original_image, self.direction)
+
+        self.explosion_image = pygame.image.load(
+            os.path.join(ASSETS_DIR, "explosion.png")
+        ).convert_alpha()
+
+        self.fire_rate = fire_rate
+        self.fire_cooldown = 0
+
+        self.screen = screen
+        self.screen_width, self.screen_height = self.screen.get_size()
+
+        self.hitbox = self.image.get_rect(center=(int(self.pos.x), int(self.pos.y)))
+
+    def rotate_image(self, image, direction):
+        angle = math.degrees(math.atan2(-direction.y, direction.x)) - 90
+        return pygame.transform.rotate(image, angle)
+
+    def update(self, dt):
+        self.velocity.y = self.direction.y * self.velocity.y
+        self.pos += self.velocity * 5  # mouvement libre dans le plan
+        self.hitbox.center = (int(self.pos.x), int(self.pos.y))
+
+        bullet_offset = (
+            self.direction * 40
+        )  # point de spawn dans la direction du vaisseau
+        self.bullet_x = self.pos.x + bullet_offset.x
+        self.bullet_y = self.pos.y + bullet_offset.y
+
+        self.shoot(dt)
+        self.bullets.update()
+
+    def draw(self, surface):
+        image_rect = self.image.get_rect(center=self.hitbox.center)
+        surface.blit(self.image, image_rect)
+        self.bullets.draw(surface)
+
+        if DEBUG:
+            pygame.draw.rect(surface, (255, 0, 0), self.hitbox, 2)
+            pygame.draw.circle(
+                surface, (255, 0, 0), (int(self.bullet_x), int(self.bullet_y)), 5
+            )
+
+    def shoot(self, dt):
+        pass  # à définir dans les sous-classes

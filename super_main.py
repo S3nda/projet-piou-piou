@@ -16,7 +16,7 @@ def main():
     clock = pygame.time.Clock()
 
     transition = Transition(screen, duration=1.5, color=(0, 0, 0))
-    current_phase = "menu"
+    current_phase = "phase2"
     transitioning = False
 
     menu = MainMenu(screen)

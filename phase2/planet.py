@@ -1,31 +1,49 @@
 import pygame
+import random
+from utils import distance, gravitational_force  # Importation des fonctions utilitaires pour calculer la distance et la force gravitationnelle
 import os
-from pygame.math import Vector2
 
-ASSETS_DIR = os.path.join(os.path.dirname(__file__), '..', 'assets')
+class Planet(pygame.sprite.Sprite):
+    def __init__(self, position, mass, gravity_range, size, image_folder="../assets/planet/"):
+        super().__init__()  # Appel du constructeur de la classe parent Sprite de Pygame
+        self.mass = mass  # Masse de la planète
+        self.gravity_range = gravity_range  # Plage de la zone d'influence gravitationnelle de la planète
+        self.size = size  # Taille de la planète donnée en paramètre
 
-class Planet:
-    def __init__(self, x, y, radius=75, gravity_strength=1200):
-        self.pos = Vector2(x, y)
-        self.radius = radius
-        self.gravity_strength = gravity_strength
+        # Sélection aléatoire d'une image parmi les fichiers .png dans le dossier spécifié
+        planet_images = [f for f in os.listdir(image_folder) if f.endswith(".png")]  # Récupération de tous les fichiers .png dans le dossier
+        if not planet_images:  # Si aucun fichier image n'est trouvé
+            raise FileNotFoundError(f"Aucune image trouvée dans le dossier {image_folder}")  # Lève une exception si aucune image n'est disponible
 
-        self.image = pygame.image.load(os.path.join(ASSETS_DIR, "planet.png")).convert_alpha()
-        self.image = pygame.transform.scale(self.image, (radius * 2, radius * 2))
-        self.rect = self.image.get_rect(center=(x, y))
+        # Choix aléatoire d'une image
+        chosen_image = random.choice(planet_images)  # Sélection aléatoire d'une image parmi celles disponibles
+        self.original_image = pygame.image.load(os.path.join(image_folder, chosen_image)).convert_alpha()  # Chargement de l'image choisie avec transparence
+
+        # Redimensionnement de l'image selon la taille spécifiée pour la planète
+        self.image = pygame.transform.scale(self.original_image, (self.size, self.size))  # Redimensionne l'image de la planète
+        self.rect = self.image.get_rect(center=position)  # Création du rectangle de collision autour de la planète
+
+        # Position réelle de la planète pour les calculs physiques
+        self.position = pygame.math.Vector2(position)
+
+    def apply_gravity_to_player(self, player):
+        """Applique la force gravitationnelle sur un joueur si celui-ci est dans la zone d'attraction de la planète."""
+        # Calcul de la distance entre la planète et le joueur
+        distance_to_player = self.position.distance_to(player.position)
+
+        # Si le joueur est dans la zone d'attraction gravitationnelle de la planète
+        if distance_to_player < self.gravity_range:
+            # Calcul de la force gravitationnelle (en simplifiant la masse du joueur à 1)
+            G = 6.67430e-11  # Constante gravitationnelle universelle
+            force_magnitude = (G * self.mass * 1) / (distance_to_player ** 2)  # Force gravitationnelle calculée avec la formule de la gravité universelle
+
+            # Direction de la gravité, un vecteur dirigé vers la planète
+            gravity_direction = (self.position - player.position).normalize()  # Normalisation du vecteur pour avoir une direction unitaire
+
+            # Retourne la force gravitationnelle à appliquer au joueur
+            return gravity_direction * force_magnitude
+        return pygame.math.Vector2(0, 0)  # Si le joueur est hors de la zone de gravité, pas de force appliquée
 
     def draw(self, screen):
-        screen.blit(self.image, self.rect)
-
-    def get_gravity_force(self, player_pos):
-        direction = self.pos - player_pos
-        distance = max(direction.length(), 5)
-        force = self.gravity_strength / (distance ** 1.2)
-        return direction.normalize() * force
-
-    def collides_with(self, player_rect):
-        # Circle-rect collision approximation
-        closest_x = max(player_rect.left, min(self.pos.x, player_rect.right))
-        closest_y = max(player_rect.top, min(self.pos.y, player_rect.bottom))
-        dist = Vector2(closest_x, closest_y).distance_to(self.pos)
-        return dist < self.radius
+        """Affiche la planète  sur l'écran."""
+        screen.blit(self.image, self.rect)  # Dessine l'image de la planète à la position définie par self.rect

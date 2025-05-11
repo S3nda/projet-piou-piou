@@ -1,103 +1,164 @@
 import pygame
-import os
 import math
-from phase2.utils import distance, normalize
 
-ASSETS_DIR = os.path.join(os.path.dirname(__file__), '..', 'assets')
-
-class Player:
-    def __init__(self, x, y):
-        self.image = pygame.image.load(os.path.join(ASSETS_DIR, "player.png")).convert_alpha()
-        self.explosion_image = pygame.image.load(os.path.join(ASSETS_DIR, "explosion.png")).convert_alpha()
-        self.pos = pygame.Vector2(x, y)
-        self.velocity = pygame.Vector2(0, 0)
-        self.radius = 16
+class Player(pygame.sprite.Sprite):
+    def __init__(self, position, fuel, image_path, explosion_path):
+        super().__init__()  # Initialisation de la classe parent Sprite de Pygame
+        self.original_image = pygame.image.load(image_path).convert_alpha()  # Chargement de l'image du vaisseau
+        self.image = self.original_image  # L'image actuelle du vaisseau
+        self.rect = self.image.get_rect(center=position)  # Création du rectangle pour la collision avec le centre à la position donnée
+        
+        # Position du joueur (utilisation de Vector2 pour une gestion facile des coordonnées)
+        self.position = pygame.math.Vector2(position)
+        
+        # Initialisation de la vitesse du joueur
+        self.velocity = pygame.math.Vector2(0, 0)
+        
+        # Gestion du carburant
+        self.fuel = fuel
+        self.fuel_max = fuel  # Le carburant maximum que le vaisseau peut avoir
+        
+        # Explosion du vaisseau (chargement de l'image d'explosion)
+        self.explosion_image = pygame.image.load(explosion_path).convert_alpha()
+        self.exploded = False  # Variable pour suivre l'état d'explosion
+        
+        # Rotation du vaisseau
+        self.angle = 0  # Initialisation de l'angle (le vaisseau est orienté vers le haut)
+        
+        # Etat de glissement (drag)
         self.dragging = False
-        self.start_pos = pygame.Vector2()
-        self.launch_velocity = pygame.Vector2()
-        self.has_shot = False
-        self.trajectory = []
-        self.fuel = 100  # Ajout du système de carburant
-        self.max_fuel = 100
-        self.fuel_consumption_rate = 0.05  # Consommation par unité de distance
+        
+        # Taux de consommation de carburant
+        self.fuel_consume_rate = 0.01  # Consommation de carburant par pixel
+        self.fuel_drain_factor = 0.1  # Facteur de drainage du carburant en fonction de la vitesse
 
-    def handle_input(self, event):
-        mouse_pos = pygame.Vector2(pygame.mouse.get_pos())
-        if event.type == pygame.MOUSEBUTTONDOWN and not self.has_shot and self.fuel > 0:
-            if distance(mouse_pos, self.pos) < 50:
+        # Gravité
+        self.gravity_strength = 0.1  # Force de la gravité exercée par la planète
+        self.gravity_range = 200  # Plage d'attraction de la gravité (en pixels)
+
+        # Limiter à un seul lancement
+        self.has_launched = False
+
+
+    def update(self, dt, planets):
+        """Met à jour la position et l'état du vaisseau"""
+        if self.fuel > 0 and not self.dragging:  # Si il y a du carburant et que le vaisseau n'est pas en train de glisser
+            self.position += self.velocity * dt  # Déplacement du vaisseau en fonction de sa vitesse et du temps écoulé
+            self.rect.center = (int(self.position.x), int(self.position.y))  # Mise à jour du centre du rectangle pour le déplacement
+        
+            # Consommation de carburant en fonction de la vitesse
+            self.fuel -= self.velocity.length() * self.fuel_drain_factor * dt  # Dépense de carburant basée sur la vitesse
+            self.fuel = max(self.fuel, 0)  # Le carburant ne peut pas être négatif
+
+        # Applique la gravité des planètes
+        self.apply_gravity(planets)
+
+        # Applique la rotation en fonction de l'angle
+        self.image = pygame.transform.rotate(self.original_image, self.angle)
+        self.rect = self.image.get_rect(center=self.rect.center)  # Assure que le centre reste fixe lors de la rotation
+    
+    def apply_gravity(self, planets):
+        """Applique la gravité des planètes sur le vaisseau."""
+        total_gravity_force = pygame.math.Vector2(0, 0)  # Initialisation de la force gravitationnelle totale
+
+        for planet in planets:
+            # Calcul de la distance entre la planète et le vaisseau
+            dx = planet.position.x - self.position.x
+            dy = planet.position.y - self.position.y
+            distance = math.sqrt(dx**2 + dy**2)
+            
+            # Zone d'attraction (3 fois la taille de la planète)
+            zone_attraction = (planet.rect.width / 2) * 3
+            
+            if distance < zone_attraction:  # Si le vaisseau est dans la zone d'attraction
+                # Calcul de la force gravitationnelle avec un facteur de réduction
+                force_magnitude = 100 / (distance ** 1.8)  # Réduit la force gravitationnelle avec une exponentiation modifiée
+                
+                # Réduction de la force pour un effet plus doux
+                force_reduction_factor = 0.1  # Réduction de la force à 10% de sa valeur
+                force_magnitude *= force_reduction_factor  # Application de la réduction
+                
+                # Direction de la gravité
+                force_direction = pygame.math.Vector2(dx, dy).normalize()  # Normalisation pour obtenir la direction
+                
+                # Calcul de la force gravitationnelle
+                gravity_force = force_direction * force_magnitude
+                
+                # Ajout de cette force à la force gravitationnelle totale
+                total_gravity_force += gravity_force
+
+        # Application de la force gravitationnelle totale à la vitesse du joueur
+        self.velocity += total_gravity_force
+
+    def handle_event(self, event):
+        """Gère les événements du jeu (clavier, souris, etc.)"""
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1 and not self.has_launched:  # Un seul lancement autorisé
                 self.dragging = True
-                self.start_pos = mouse_pos
+                self.drag_start_pos = pygame.math.Vector2(event.pos)  # Sauvegarde de la position initiale du drag
+                self.initial_angle = self.angle  # Sauvegarde de l'angle avant le drag
+                self.initial_position = self.position  # Sauvegarde de la position avant le drag
+                self.velocity = pygame.math.Vector2(0, 0)  # Réinitialisation de la vitesse pendant le drag
+                
+        elif event.type == pygame.MOUSEMOTION:
+            if self.dragging:
+                # Calcul de l'angle de direction pour la rotation
+                mouse_pos = pygame.math.Vector2(event.pos)
+                direction_vector = mouse_pos - self.position
+                
+                # Calcul de l'angle avec atan2 pour une orientation correcte
+                self.angle = -math.degrees(math.atan2(direction_vector.y, direction_vector.x)) + 90
 
-        elif event.type == pygame.MOUSEBUTTONUP and self.dragging:
-            self.launch_velocity = self.start_pos - mouse_pos
-            self.velocity = self.launch_velocity
-            self.dragging = False
-            self.has_shot = True
-            self.trajectory = []
+                # Appliquer la rotation
+                self.image = pygame.transform.rotate(self.original_image, self.angle)
+                
+                # Ajuster la position du rectangle pour que le centre ne change pas
+                self.rect = self.image.get_rect(center=self.rect.center)
+                
+                # Calcul de la vitesse pour le lancement
+                drag_distance = direction_vector.length()
+                self.velocity = -direction_vector.normalize() * drag_distance * 0.001  # Multiplier pour ajuster la vitesse
 
-        elif event.type == pygame.MOUSEMOTION and self.dragging:
-            self.launch_velocity = self.start_pos - mouse_pos
-            self.update_trajectory()
 
-    def update_trajectory(self):
-        self.trajectory = []
-        pos = pygame.Vector2(self.pos)
-        vel = pygame.Vector2(self.launch_velocity)
 
-        for _ in range(50):
-            gravity = pygame.Vector2(0, 0)
-            self.trajectory.append(pos.xy)
-            pos += vel * 0.1
-            vel += gravity * 0.1
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1 and self.dragging:
+                self.dragging = False
+                self.has_launched = True  # Interdit tout autre lancement
+                self.launch_velocity = self.velocity  # Sauvegarde la vitesse de lancement du vaisseau
 
-    def update(self, planets):
-        if self.has_shot and self.fuel > 0:
-            gravity = pygame.Vector2(0, 0)
-            for planet in planets:
-                direction = planet.pos - self.pos
-                dist = max(distance(self.pos, planet.pos), 5)
-                force = planet.gravity_strength / (dist ** 1.2)
-                gravity += pygame.Vector2(normalize(direction)) * force
+        
+    def explode(self):
+        """Gère l'explosion du vaisseau"""
+        self.exploded = True  # Le vaisseau est maintenant explosé
+        self.image = self.explosion_image  # Changement de l'image pour celle de l'explosion
+        self.rect = self.image.get_rect(center=self.rect.center)  # Ajuste la position du rectangle avec l'image d'explosion
+    
+    def move(self):
+        """Déplace le vaisseau pendant le jeu"""
+        if not self.dragging:  # Si le vaisseau n'est pas en train de glisser
+            if self.fuel > 0:
+                # Mise à jour de la position du vaisseau en fonction de la vitesse
+                self.position += self.velocity
+                self.rect.center = (int(self.position.x), int(self.position.y))  # Mise à jour du rectangle pour suivre la position
 
-            self.velocity += gravity
-            self.pos += self.velocity
+    def draw_fuel_bar(self, screen):
+        """Dessine la barre de carburant en haut de l'écran avec le texte 'Carburant'."""
+        fuel_width = 1000  # Largeur de la barre de carburant
+        fuel_height = 60  # Hauteur de la barre de carburant
+        fuel_percentage = self.fuel / self.fuel_max  # Pourcentage du carburant restant
 
-            # Consommer du carburant
-            self.fuel -= self.velocity.length() * self.fuel_consumption_rate
-            self.fuel = max(self.fuel, 0)  # Ne pas descendre en dessous de zéro
+        # Récupère la largeur de l'écran
+        screen_width = screen.get_width()
 
-    def draw(self, screen):
-        # Rotation vers la trajectoire
-        if self.velocity.length_squared() > 0:
-            angle = math.degrees(math.atan2(-self.velocity.y, self.velocity.x))
-        else:
-            angle = 0
+        # Dessiner l'arrière-plan de la barre de carburant
+        pygame.draw.rect(screen, (50, 50, 50), (screen_width // 2 - fuel_width // 2, 40, fuel_width, fuel_height))
 
-        rotated_img = pygame.transform.rotate(self.image, angle)
-        rect = rotated_img.get_rect(center=self.pos)
-        screen.blit(rotated_img, rect)
+        # Dessiner la barre de carburant
+        pygame.draw.rect(screen, (0, 255, 0), (screen_width // 2 - fuel_width // 2, 40, int(fuel_width * fuel_percentage), fuel_height))
 
-        # Trajectoire
-        if self.dragging and not self.has_shot:
-            pygame.draw.lines(screen, (200, 200, 255), False, self.trajectory, 2)
-
-        # Barre de carburant
-        fuel_bar_width = 100
-        fuel_bar_height = 10
-        fuel_ratio = self.fuel / self.max_fuel
-        fuel_color = (0, 255, 0) if fuel_ratio > 0.3 else (255, 0, 0)
-        fuel_rect = pygame.Rect(self.pos.x - fuel_bar_width // 2, self.pos.y - 40, int(fuel_bar_width * fuel_ratio), fuel_bar_height)
-        bg_rect = pygame.Rect(self.pos.x - fuel_bar_width // 2, self.pos.y - 40, fuel_bar_width, fuel_bar_height)
-        pygame.draw.rect(screen, (50, 50, 50), bg_rect)
-        pygame.draw.rect(screen, fuel_color, fuel_rect)
-
-    def explode_animation(self):
-        explosion = pygame.transform.scale(self.explosion_image, (40, 40))
-        rect = explosion.get_rect(center=self.pos)
-        pygame.display.get_surface().blit(explosion, rect)
-
-    def win_animation(self):
-        pygame.draw.circle(pygame.display.get_surface(), (0, 255, 0), self.pos, 25)
-
-    def get_rect(self):
-        return pygame.Rect(self.pos.x - self.radius, self.pos.y - self.radius, self.radius * 2, self.radius * 2)
+        # Dessiner le texte "Carburant"
+        font = pygame.font.SysFont("Arial", 40)  # Police pour le texte
+        text_surface = font.render("Carburant", True, (255, 0, 0))  # Créer le texte
+        text_rect = text_surface.get_rect(center=(screen_width // 2, 70))  # Centrer le texte
+        screen.blit(text_surface, text_rect)  # Afficher le texte sur l'écran
