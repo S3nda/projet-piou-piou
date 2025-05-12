@@ -111,11 +111,11 @@ class Phase2:
 
             if self.check_victory():
                 print("Victoire ! Vous avez atteint la cible.")
-                return "victory"
+                return "phase1"
             if self.check_collision():
                 self.player.explode()
                 print("Perdu ! Vous avez percuté une planète obstacle.")
-                return "defeat"
+                return "menu"
 
             self.screen.blit(self.background, (0, 0))
             self.all_sprites.draw(self.screen)
