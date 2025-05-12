@@ -26,6 +26,7 @@ class Enemy(Starship):
         self.is_waiting = False
 
     def update(self, dt):
+        super().update(dt)
         # Si nous sommes en attente, décrémenter le timer d'attente
         if self.is_waiting:
             self.wait_timer -= dt
@@ -59,7 +60,7 @@ class Enemy(Starship):
                 self.velocity = pygame.Vector2(0, 0)
 
         self.bullet_y = self.pos.y + 75
-        super().update(dt)  # Appel à la méthode update de la classe parente
+          # Appel à la méthode update de la classe parente
 
     def shoot(self, dt):
         if self.fire_cooldown <= 0:
@@ -73,4 +74,3 @@ class Enemy(Starship):
 
     def take_damage(self, damage=1):
         self.hp -= damage
-        return self.hp <= 0
