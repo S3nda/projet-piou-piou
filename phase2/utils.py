@@ -13,16 +13,16 @@ def normalize(vector):
 
 def gravitational_force(mass1, mass2, pos1, pos2):
     """Retourne la force gravitationnelle entre deux objets selon la loi de la gravitation de Newton."""
-    G = 6.67430e-11  # Constante gravitationnelle (en m^3 kg^-1 s^-2)
-    distance = pos1.distance_to(pos2)  # Distance entre les deux objets
+    G = 6.67430e-11
+    distance = pos1.distance_to(pos2)
     
-    if distance == 0:  # Éviter la division par zéro si les objets sont au même endroit
+    if distance == 0:
         return pygame.math.Vector2(0, 0)
 
-    force_magnitude = (G * mass1 * mass2) / (distance ** 2)  # Loi de la gravité de Newton
-    force_direction = (pos2 - pos1).normalize()  # Direction de la force, du joueur vers la planète
+    force_magnitude = (G * mass1 * mass2) / (distance ** 2)
+    force_direction = (pos2 - pos1).normalize()
     
-    return force_direction * force_magnitude  # Retourne la force sous forme de vecteur
+    return force_direction * force_magnitude 
 
 def add_vectors(v1, v2):
     """Additionne deux vecteurs."""
