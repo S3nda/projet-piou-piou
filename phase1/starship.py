@@ -15,7 +15,7 @@ class Starship(pygame.sprite.Sprite):
         self.pos = pygame.Vector2(x, y)
         self.velocity = pygame.Vector2(0, 0)
 
-        self.hp = 1
+        self.hp = 3
         self.bullets = pygame.sprite.Group()
         self.bullet_x = self.pos.x
         self.bullet_y = self.pos.y
@@ -39,6 +39,7 @@ class Starship(pygame.sprite.Sprite):
         self.screen_width, self.screen_height = self.screen.get_size()
 
         self.hitbox = self.image.get_rect(center=(int(self.pos.x), int(self.pos.y)))
+        self.rect = self.hitbox
 
     def rotate_image(self, image, direction):
         angle = math.degrees(math.atan2(-direction.y, direction.x)) - 90
