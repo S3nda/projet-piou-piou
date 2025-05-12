@@ -83,5 +83,13 @@ class Phase1:
 
 
     def got_hit(self):
-        if pygame.sprite.collide_rect(self.player, self.enemybullet) or pygame.sprite.collide_rect(self.player, self.rock) or pygame.sprite.collide_rect(self.player, self.enemy):
-            return True
+        for enemy in self.spawner.enemies :
+            if pygame.sprite.collide_rect(self.player, enemy):
+                return True
+            for bullet in enemy.bullets :
+                if pygame.sprite.collide_rect(self.player, bullet):
+                     return True
+        for rock in self.rock_group :
+            if pygame.sprite.collide_rect(self.player, rock):
+                return True
+        return False
