@@ -5,6 +5,7 @@ import math
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "..", "assets")
 DEBUG = True
 
+
 class Starship(pygame.sprite.Sprite):
     def __init__(
         self, x, y, screen, image_path: str, fire_rate: int, direction: pygame.Vector2
@@ -18,7 +19,6 @@ class Starship(pygame.sprite.Sprite):
         self.bullets = pygame.sprite.Group()
         self.bullet_x = self.pos.x
         self.bullet_y = self.pos.y
-        self.alive = True
 
         self.direction = direction
 
@@ -35,15 +35,33 @@ class Starship(pygame.sprite.Sprite):
         self.dying = False
         self.alive = True
 
-        explosion_image1 = pygame.image.load(os.path.join(ASSETS_DIR, "Explosion_animated", "Explosion_frame1.png"))
-        explosion_image2 = pygame.image.load(os.path.join(ASSETS_DIR, "Explosion_animated", "Explosion_frame2.png"))
-        explosion_image3 = pygame.image.load(os.path.join(ASSETS_DIR, "Explosion_animated", "Explosion_frame3.png"))
-        explosion_image4 = pygame.image.load(os.path.join(ASSETS_DIR, "Explosion_animated", "Explosion_frame4.png"))
-        explosion_image5 = pygame.image.load(os.path.join(ASSETS_DIR, "Explosion_animated", "Explosion_frame5.png"))
-        explosion_image6 = pygame.image.load(os.path.join(ASSETS_DIR, "Explosion_animated", "Explosion_frame6.png"))
+        explosion_image1 = pygame.image.load(
+            os.path.join(ASSETS_DIR, "Explosion_animated", "Explosion_frame1.png")
+        )
+        explosion_image2 = pygame.image.load(
+            os.path.join(ASSETS_DIR, "Explosion_animated", "Explosion_frame2.png")
+        )
+        explosion_image3 = pygame.image.load(
+            os.path.join(ASSETS_DIR, "Explosion_animated", "Explosion_frame3.png")
+        )
+        explosion_image4 = pygame.image.load(
+            os.path.join(ASSETS_DIR, "Explosion_animated", "Explosion_frame4.png")
+        )
+        explosion_image5 = pygame.image.load(
+            os.path.join(ASSETS_DIR, "Explosion_animated", "Explosion_frame5.png")
+        )
+        explosion_image6 = pygame.image.load(
+            os.path.join(ASSETS_DIR, "Explosion_animated", "Explosion_frame6.png")
+        )
 
-        self.explosion_images = [explosion_image1, explosion_image2, explosion_image3, explosion_image4, explosion_image5, explosion_image6]
-
+        self.explosion_images = [
+            explosion_image1,
+            explosion_image2,
+            explosion_image3,
+            explosion_image4,
+            explosion_image5,
+            explosion_image6,
+        ]
 
         self.fire_rate = fire_rate
         self.fire_cooldown = 0
@@ -64,7 +82,7 @@ class Starship(pygame.sprite.Sprite):
             self.pos += self.velocity * 5  # mouvement libre dans le plan
             self.hitbox.center = (int(self.pos.x), int(self.pos.y))
 
-            if self.hp <= 0 :
+            if self.hp <= 0:
                 self.die()
 
             bullet_offset = (
@@ -83,7 +101,6 @@ class Starship(pygame.sprite.Sprite):
             if self.explosion_index < len(self.explosion_images):
                 self.image = self.explosion_images[self.explosion_index]
 
-
     def draw(self, surface):
         image_rect = self.image.get_rect(center=self.hitbox.center)
         surface.blit(self.image, image_rect)
@@ -97,7 +114,7 @@ class Starship(pygame.sprite.Sprite):
 
     def shoot(self, dt):
         pass  # à définir dans les sous-classes
-    
+
     def die(self):
         if not self.dying:
             self.dying = True
@@ -107,3 +124,4 @@ class Starship(pygame.sprite.Sprite):
             self.alive = False
         self.kill()
         return 1
+

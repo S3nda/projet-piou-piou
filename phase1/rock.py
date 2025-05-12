@@ -7,8 +7,10 @@ DEBUG = True
 
 
 class Rock(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, screen):
         super().__init__()
+        self.screen = screen
+
         self.original_image = pygame.image.load(
             os.path.join(ASSETS_DIR, "rock.png")
         ).convert_alpha()
@@ -23,8 +25,13 @@ class Rock(pygame.sprite.Sprite):
 
         self.angle = random.randint(0, 360)
         self.image = pygame.transform.rotate(self.original_image, self.angle)
-        self.rect = self.image.get_rect(center=(x, y))
+
         self.pos = pygame.Vector2(x, y)
+
+        hitbox_width = 50 + 10 * scale_factor
+        hitbox_height = 50 + 10 * scale_factor
+        self.rect = pygame.Rect(0, 0, hitbox_width, hitbox_height)
+        self.rect.center = (int(self.pos.x), int(self.pos.y))
 
         self.rotation_speed = self.speed * 0.05
 
@@ -36,11 +43,11 @@ class Rock(pygame.sprite.Sprite):
             self.angle -= 360
 
         self.image = pygame.transform.rotate(self.original_image, self.angle)
+        self.rect.centerx = int(self.pos.x)
+        self.rect.centery = int(self.pos.y)
 
-        center = self.rect.center
-        self.rect = self.image.get_rect()
-        self.rect.center = center
-        self.rect.y = int(self.pos.y)
+        if DEBUG:
+            pygame.draw.rect(self.screen, (0, 255, 0), self.rect, 1)
 
-        if self.rect.top > 1080:  # à adapter à la hauteur de ton écran
+        if self.rect.top > 1080:
             self.kill()

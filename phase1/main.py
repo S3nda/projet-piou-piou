@@ -2,10 +2,6 @@ import pygame
 from phase1.player import Player
 from phase1.rockspawner import RockSpawner
 from phase1.enemy_spawner import EnemySpawner
-from phase1.bullet import EnemyBullet
-from phase1.enemy import Enemy
-from phase1.starship import Starship
-from phase1.rock import Rock
 from phase1.gui.health_bar import HealthBar
 import os
 
@@ -32,7 +28,7 @@ class Phase1:
         self.player = Player(self.width // 2, self.height // 2 + 200, self.screen)
 
         self.rock_group = pygame.sprite.Group()
-        self.rock_spawner = RockSpawner(screen.get_width(), self.rock_group)
+        self.rock_spawner = RockSpawner(screen, self.rock_group)
         self.spawner = EnemySpawner(screen)
 
         self.health_bar = HealthBar(self.player)
@@ -41,7 +37,7 @@ class Phase1:
         clock = pygame.time.Clock()
         running = True
 
-        self.spawner.spawn_wave(11)
+        self.spawner.spawn_wave(2)
 
         while running:
             for event in pygame.event.get():
@@ -66,30 +62,30 @@ class Phase1:
 
             self.health_bar.update()
 
-            #Fonction qui vérifie les collisions
-            if self.got_hit() == True :
+            # Fonction qui vérifie les collisions
+            if self.got_hit():
                 self.player.hp -= 1
 
             pygame.display.flip()
 
+            # Etat de game over
+            # if self.player.death == True :
+            #   overlay = font.render("GAME OVER", True, (255, 255, 255))
+            #  screen.blit(overlay, (500, 500))
 
-            #Etat de game over
-            #if self.player.death == True :
-             #   overlay = font.render("GAME OVER", True, (255, 255, 255))
-              #  screen.blit(overlay, (500, 500))
-
-#                message = petite_police.render("Appuie sur une touche pour recommencer", True, (200, 200, 200))
- #               screen.blit(message, (200, 350))
-
+    #                message = petite_police.render("Appuie sur une touche pour recommencer", True, (200, 200, 200))
+    #               screen.blit(message, (200, 350))
 
     def got_hit(self):
-        for enemy in self.spawner.enemies :
+        for enemy in self.spawner.enemies:
             if pygame.sprite.collide_rect(self.player, enemy):
+                if DEBUG:
+                    print("Vaisseau")
                 return True
-            for bullet in enemy.bullets :
+            for bullet in enemy.bullets:
                 if pygame.sprite.collide_rect(self.player, bullet):
-                     return True
-        for rock in self.rock_group :
+                    return True
+        for rock in self.rock_group:
             if pygame.sprite.collide_rect(self.player, rock):
                 return True
         return False
