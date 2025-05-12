@@ -79,7 +79,7 @@ class Starship(pygame.sprite.Sprite):
     def update(self, dt):
         if not self.dying and self.alive:
             self.velocity.y = self.direction.y * self.velocity.y
-            self.pos += self.velocity * 5  # mouvement libre dans le plan
+            self.pos += self.velocity * 3  # mouvement libre dans le plan
             self.hitbox.center = (int(self.pos.x), int(self.pos.y))
 
             if self.hp <= 0:
@@ -124,4 +124,3 @@ class Starship(pygame.sprite.Sprite):
             self.alive = False
         self.kill()
         return 1
-

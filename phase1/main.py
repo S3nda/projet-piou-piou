@@ -18,27 +18,31 @@ class Phase1:
     def __init__(self, screen):
         self.screen = screen
         self.width, self.height = screen.get_size()
-
         bg_path = os.path.join(ASSETS_DIR, "bg1.png")
         self.background = pygame.image.load(bg_path).convert()
         self.background = pygame.transform.scale(
             self.background, (self.width, self.height)
         )
-
         self.player = Player(self.width // 2, self.height // 2 + 200, self.screen)
-
         self.rock_group = pygame.sprite.Group()
         self.rock_spawner = RockSpawner(screen, self.rock_group)
         self.spawner = EnemySpawner(screen)
-
         self.health_bar = HealthBar(self.player)
+
+        # Variables pour le système de vagues
+        self.current_wave = 0
+        self.max_waves = 9
+        self.wave_completed = True
+        self.wave_transition_timer = 0
+        self.wave_transition_delay = 3000  # Délai de 3 secondes entre les vagues
+        self.font = pygame.font.SysFont("Arial", 48)
+        self.small_font = pygame.font.SysFont("Arial", 24)
 
     def run(self):
         clock = pygame.time.Clock()
         running = True
 
-        self.spawner.spawn_wave(2)
-
+        # On ne lance pas de vague au début, on va le faire dans la boucle principale
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -46,6 +50,23 @@ class Phase1:
 
             dt = clock.tick(180)
             keys = pygame.key.get_pressed()
+
+            # Gestion des transitions entre les vagues
+            if self.wave_completed:
+                if self.current_wave >= self.max_waves:
+                    # Toutes les vagues sont terminées, passons à la phase 2
+                    return "phase 2"
+
+                self.wave_transition_timer += dt
+                if self.wave_transition_timer >= self.wave_transition_delay:
+                    self.wave_transition_timer = 0
+                    self.current_wave += 1
+                    self.spawner.spawn_wave(self.current_wave)
+                    self.wave_completed = False
+            else:
+                # Vérifier si tous les ennemis sont éliminés
+                if len(self.spawner.enemies) == 0:
+                    self.wave_completed = True
 
             self.screen.blit(self.background, (0, 0))
 
@@ -66,15 +87,72 @@ class Phase1:
             if self.got_hit():
                 self.player.hp -= 1
 
+            # Affichage du numéro de vague
+            if self.wave_completed and self.current_wave < self.max_waves:
+                wave_text = self.font.render(
+                    f"Vague {self.current_wave + 1} sur {self.max_waves}",
+                    True,
+                    (255, 255, 255),
+                )
+                self.screen.blit(
+                    wave_text,
+                    (self.width // 2 - wave_text.get_width() // 2, self.height // 3),
+                )
+
+                if self.current_wave > 0:  # Ne pas afficher "complétée" pour la vague 0
+                    completed_text = self.small_font.render(
+                        f"Vague {self.current_wave} complétée!", True, (200, 255, 200)
+                    )
+                    self.screen.blit(
+                        completed_text,
+                        (
+                            self.width // 2 - completed_text.get_width() // 2,
+                            self.height // 3 + 60,
+                        ),
+                    )
+            elif not self.wave_completed:
+                wave_text = self.small_font.render(
+                    f"Vague {self.current_wave}/{self.max_waves}", True, (200, 200, 255)
+                )
+                self.screen.blit(wave_text, (50, 50))
+
             pygame.display.flip()
 
-            # Etat de game over
-            # if self.player.death == True :
-            #   overlay = font.render("GAME OVER", True, (255, 255, 255))
-            #  screen.blit(overlay, (500, 500))
+            # État de game over
+            if not self.player.alive:
+                font = self.font  # Utilisez self.font qui est déjà défini
+                petite_police = (
+                    self.small_font
+                )  # Utilisez self.small_font qui est déjà défini
 
-    #                message = petite_police.render("Appuie sur une touche pour recommencer", True, (200, 200, 200))
-    #               screen.blit(message, (200, 350))
+                # Affichage du game over
+                overlay = font.render("GAME OVER", True, (255, 255, 255))
+                self.screen.blit(
+                    overlay,
+                    (
+                        self.width // 2 - overlay.get_width() // 2,
+                        self.height // 2 - overlay.get_height() // 2,
+                    ),
+                )
+
+                message = petite_police.render(
+                    "Appuie sur une touche pour recommencer", True, (200, 200, 200)
+                )
+                self.screen.blit(
+                    message,
+                    (self.width // 2 - message.get_width() // 2, self.height // 2 + 50),
+                )
+
+                pygame.display.flip()
+
+                # Attendre que le joueur appuie sur une touche
+                waiting = True
+                while waiting:
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            return "quit"
+                        if event.type == pygame.KEYDOWN:
+                            return "restart"  # On peut retourner "restart" pour recommencer la phase 1
 
     def got_hit(self):
         for enemy in self.spawner.enemies:
