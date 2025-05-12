@@ -21,13 +21,13 @@ def main():
     transition = Transition(screen, duration=1.5, color=(0, 0, 0))
     transitioning = False
 
-    menu = MenuPrincipal(screen)
-    phase1 = Phase1(screen)
-    phase2 = Phase2(screen)
-
     current_phase = "menu"
 
     while True:
+        menu = MenuPrincipal(screen)
+        phase1 = Phase1(screen)
+        phase2 = Phase2(screen)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -49,10 +49,14 @@ def main():
                     current_phase = "phase1"
                     transition.start()
             elif current_phase == "phase1":
-                result = phase1.run()
+                result = phase1.run(clock)
                 if result == "phase2":
                     transitioning = True
                     current_phase = "phase2"
+                    transition.start()
+                else:
+                    transitioning = True
+                    current_phase = "menu"
                     transition.start()
 
         if transitioning:
@@ -61,7 +65,7 @@ def main():
                 transitioning = False
 
         pygame.display.flip()
-        clock.tick(60)
+        clock.tick(180)
 
 
 if __name__ == "__main__":

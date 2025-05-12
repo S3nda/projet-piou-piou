@@ -39,8 +39,7 @@ class Phase1:
         self.font = pygame.font.SysFont("Arial", 48)
         self.small_font = pygame.font.SysFont("Arial", 24)
 
-    def run(self):
-        clock = pygame.time.Clock()
+    def run(self, clock):
         running = True
 
         # On ne lance pas de vague au début, on va le faire dans la boucle principale
@@ -82,7 +81,7 @@ class Phase1:
             self.spawner.draw(self.screen)
 
             # Affichage de la barre de vie
-            position = (50, 50)
+            position = (0, 0)
             if self.player.hp >= 3:
                 image_hp = pygame.image.load("assets/Healthbar_3.png").convert_alpha()
             elif self.player.hp == 2:
@@ -98,7 +97,7 @@ class Phase1:
             score_text = self.small_font.render(
                 f"Score: {self.score}", True, (255, 255, 255)
             )
-            self.screen.blit(score_text, (300, 200))
+            self.screen.blit(score_text, (0, self.height))
 
             # Fonction qui vérifie les collisions
             if self.player_got_hit():
@@ -119,7 +118,7 @@ class Phase1:
                     (self.width // 2 - wave_text.get_width() // 2, self.height // 3),
                 )
 
-                if self.current_wave > 0:  # Ne pas afficher "complétée" pour la vague 0
+                if self.current_wave > 0:
                     completed_text = self.small_font.render(
                         f"Vague {self.current_wave} complétée!", True, (200, 255, 200)
                     )
