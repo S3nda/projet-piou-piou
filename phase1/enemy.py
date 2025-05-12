@@ -8,51 +8,58 @@ DEBUG = True
 
 
 class Enemy(Starship):
-    def __init__(self, x, y, screen, instructions=[], health=1, fire_rate=800):
+    def __init__(self, x, y, screen, instructions, health=1, fire_rate=800):
         image_path = os.path.join(ASSETS_DIR, "enemy.png")
         direction = pygame.Vector2(0, 1)  # vers le bas
         super().__init__(
             x, y, screen, image_path, fire_rate=fire_rate, direction=direction
         )
-
+        """
+        instructions look like [(velocity_vector, time_to_move, time_to_wait)]
+        """
         self.hp = health
         self.instructions = instructions
         self.current_instruction = 0
-        self.instruction_timer = 0
-        self.is_waiting = False
+        self.move_timer = 0
         self.wait_timer = 0
+        self.is_moving = True
+        self.is_waiting = False
 
     def update(self, dt):
+        # Si nous sommes en attente, décrémenter le timer d'attente
         if self.is_waiting:
             self.wait_timer -= dt
             self.velocity = pygame.Vector2(0, 0)
             if self.wait_timer <= 0:
                 self.is_waiting = False
+                self.is_moving = True
                 self.current_instruction = (self.current_instruction + 1) % len(
                     self.instructions
                 )
+                self.move_timer = 0
             return
 
-        if self.current_instruction < len(self.instructions):
-            dx, dy, wait_time = self.instructions[self.current_instruction]
-            self.velocity.x = dx / 5
-            self.velocity.y = -dy / 5
-            self.instruction_timer += dt
+        # Si nous sommes en mouvement
+        if self.is_moving and self.current_instruction < len(self.instructions):
+            velocity_vector, time_to_move, time_to_wait = self.instructions[
+                self.current_instruction
+            ]
 
-            if self.instruction_timer >= 1000:
-                target_x = self.pos.x + dx
-                target_y = self.pos.y - dy
-                distance = (
-                    (target_x - self.pos.x) ** 2 + (target_y - self.pos.y) ** 2
-                ) ** 0.5
+            # Appliquer le vecteur de vélocité
+            self.velocity = velocity_vector
 
-                if distance < 10:
-                    self.is_waiting = True
-                    self.wait_timer = wait_time * 1000
-                    self.instruction_timer = 0
+            # Incrémenter le timer de mouvement
+            self.move_timer += dt
+
+            # Vérifier si le temps de mouvement est écoulé
+            if self.move_timer >= time_to_move:
+                self.is_moving = False
+                self.is_waiting = True
+                self.wait_timer = time_to_wait
+                self.velocity = pygame.Vector2(0, 0)
 
         self.bullet_y = self.pos.y + 75
-        super().update(dt)
+        super().update(dt)  # Appel à la méthode update de la classe parente
 
     def shoot(self, dt):
         if self.fire_cooldown <= 0:

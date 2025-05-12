@@ -53,9 +53,14 @@ class EnemySpawner:
             enemy.draw(surface)
 
     def _test_wave(self):
-        enemy = Enemy(self.screen_width // 2, self.screen_height // 2, self.screen)
+        enemy = Enemy(
+            self.screen_width // 2,
+            self.screen_height // 2,
+            self.screen,
+            [(pygame.math.Vector2(0, 1), 10, 0)],  # Direction vers le bas
+        )
         self.enemies.add(enemy)
-        return
+        return [enemy]
 
     def _wave_basic_line(self):
         enemies_created = []
@@ -68,8 +73,15 @@ class EnemySpawner:
                 - ((num_enemies - 1) * spacing) // 2
                 + i * spacing
             )
-            y = 0
-            enemy = Enemy(x, y, self.screen)
+            y = 100
+            enemy = Enemy(
+                x,
+                y,
+                self.screen,
+                instructions=[
+                    (pygame.math.Vector2(0, 1), 10, 0)  # Direction vers le bas
+                ],
+            )
             self.enemies.add(enemy)
             enemies_created.append(enemy)
 
@@ -96,10 +108,14 @@ class EnemySpawner:
                 start_y,
                 self.screen,
                 instructions=[
-                    (0, -300, 10),  # Descendre de 300px, attendre 1s
-                    (100 * i, 100, 0.5),  # Se déplacer en diagonale, attendre 0.5s
-                    (-100, 0, 0.5),  # Aller à gauche, attendre 0.5s
-                    (0, 200, 0),  # Continuer à descendre
+                    (pygame.math.Vector2(0, 1), 3, 1),  # Descendre, attendre 1s
+                    (
+                        pygame.math.Vector2(1, 1).normalize(),
+                        2,
+                        0.5,
+                    ),  # Diagonale bas-droite, attendre 0.5s
+                    (pygame.math.Vector2(-1, 0), 1, 0.5),  # Gauche, attendre 0.5s
+                    (pygame.math.Vector2(0, 1), 3, 0),  # Continuer à descendre
                 ],
             )
             self.enemies.add(left_enemy)
@@ -113,10 +129,14 @@ class EnemySpawner:
                     start_y,
                     self.screen,
                     instructions=[
-                        (0, 300, 1),  # Descendre de 300px, attendre 1s
-                        (-100 * i, 100, 0.5),  # Se déplacer en diagonale, attendre 0.5s
-                        (100, 0, 0.5),  # Aller à droite, attendre 0.5s
-                        (0, 200, 0),  # Continuer à descendre
+                        (pygame.math.Vector2(0, 1), 3, 1),  # Descendre, attendre 1s
+                        (
+                            pygame.math.Vector2(-1, 1).normalize(),
+                            2,
+                            0.5,
+                        ),  # Diagonale bas-gauche, attendre 0.5s
+                        (pygame.math.Vector2(1, 0), 1, 0.5),  # Droite, attendre 0.5s
+                        (pygame.math.Vector2(0, 1), 3, 0),  # Continuer à descendre
                     ],
                 )
                 self.enemies.add(right_enemy)
@@ -134,41 +154,27 @@ class EnemySpawner:
 
         for i in range(num_enemies):
             # Calculer la position sur le cercle
-            angle = (i / num_enemies) * 2 * 3.14159  # en radians
-            x = (
-                center_x
-                + radius * pygame.math.Vector2(math.cos(angle), math.sin(angle)).x
-            )
-            y = (
-                center_y
-                + radius * pygame.math.Vector2(math.cos(angle), math.sin(angle)).y
-            )
+            angle = (i / num_enemies) * 2 * math.pi  # en radians
+            x = center_x + radius * math.cos(angle)
+            y = center_y + radius * math.sin(angle)
 
             # Créer des instructions pour faire tourner en cercle
             instructions = []
             for j in range(8):  # 8 segments pour faire un cercle complet
-                next_angle = angle + (j + 1) * 3.14159 / 4
-                next_x = (
-                    center_x
-                    + radius
-                    * pygame.math.Vector2(math.cos(next_angle), math.sin(next_angle)).x
-                )
-                next_y = (
-                    center_y
-                    + radius
-                    * pygame.math.Vector2(math.cos(next_angle), math.sin(next_angle)).y
+                # Direction tangentielle au cercle
+                angle_tangent = (
+                    angle + (j * math.pi / 4) + (math.pi / 2)
+                )  # + pi/2 pour avoir la tangente
+                direction = pygame.math.Vector2(
+                    math.cos(angle_tangent), math.sin(angle_tangent)
                 )
 
-                dx = next_x - x if j == 0 else next_x - prev_x
-                dy = next_y - y if j == 0 else next_y - prev_y
                 instructions.append(
-                    (dx, -dy, 0.5)
-                )  # Attendre 0.5s entre chaque segment
-
-                prev_x, prev_y = next_x, next_y
+                    (direction, 2, 0.5)  # Déplacement tangentiel, attendre 0.5s
+                )
 
             # Après le cercle, descendre
-            instructions.append((0, 300, 0))
+            instructions.append((pygame.math.Vector2(0, 1), 3, 0))
 
             enemy = Enemy(x, y, self.screen, instructions=instructions, fire_rate=1200)
             self.enemies.add(enemy)
@@ -192,13 +198,21 @@ class EnemySpawner:
             # Créer un chemin en zigzag
             instructions = []
             for j in range(5):  # 5 zigzags
-                # Aller à droite puis à gauche
+                # Aller à droite puis à gauche en descendant
                 if j % 2 == 0:
-                    instructions.append((200, 100, 0.2))  # Diagonale droite-bas
-                    instructions.append((-200, 100, 0.2))  # Diagonale gauche-bas
+                    instructions.append(
+                        (pygame.math.Vector2(1, 1).normalize(), 2, 0.2)
+                    )  # Diagonale droite-bas
+                    instructions.append(
+                        (pygame.math.Vector2(-1, 1).normalize(), 2, 0.2)
+                    )  # Diagonale gauche-bas
                 else:
-                    instructions.append((-200, 100, 0.2))  # Diagonale gauche-bas
-                    instructions.append((200, 100, 0.2))  # Diagonale droite-bas
+                    instructions.append(
+                        (pygame.math.Vector2(-1, 1).normalize(), 2, 0.2)
+                    )  # Diagonale gauche-bas
+                    instructions.append(
+                        (pygame.math.Vector2(1, 1).normalize(), 2, 0.2)
+                    )  # Diagonale droite-bas
 
             enemy = Enemy(x, y, self.screen, instructions=instructions, fire_rate=600)
             self.enemies.add(enemy)
@@ -215,9 +229,9 @@ class EnemySpawner:
             x = -100
             y = 100 + i * 150
             instructions = [
-                (self.screen_width + 200, 0, 3),  # Traverser l'écran, attendre 3s
-                (-100, 0, 0),  # Retourner à gauche (hors écran)
-                (self.screen_width + 200, 0, 3),  # Traverser à nouveau
+                (pygame.math.Vector2(1, 0), 5, 3),  # Traverser l'écran, attendre 3s
+                (pygame.math.Vector2(-1, 0), 1, 0),  # Retourner à gauche (hors écran)
+                (pygame.math.Vector2(1, 0), 5, 3),  # Traverser à nouveau
             ]
             enemy = Enemy(x, y, self.screen, instructions=instructions, fire_rate=500)
             self.enemies.add(enemy)
@@ -229,12 +243,12 @@ class EnemySpawner:
             y = 175 + i * 150
             instructions = [
                 (
-                    -(self.screen_width + 200),
-                    0,
+                    pygame.math.Vector2(-1, 0),
+                    5,
                     3,
                 ),  # Traverser l'écran dans l'autre sens
-                (100, 0, 0),  # Retourner à droite (hors écran)
-                (-(self.screen_width + 200), 0, 3),  # Traverser à nouveau
+                (pygame.math.Vector2(1, 0), 1, 0),  # Retourner à droite (hors écran)
+                (pygame.math.Vector2(-1, 0), 5, 3),  # Traverser à nouveau
             ]
             enemy = Enemy(x, y, self.screen, instructions=instructions, fire_rate=500)
             self.enemies.add(enemy)
@@ -258,10 +272,10 @@ class EnemySpawner:
             health=10,
             fire_rate=300,
             instructions=[
-                (200, 0, 1),  # Droite, pause
-                (0, 100, 1),  # Bas, pause
-                (-200, 0, 1),  # Gauche, pause
-                (0, -100, 1),  # Haut, pause
+                (pygame.math.Vector2(1, 0), 2, 1),  # Droite, pause
+                (pygame.math.Vector2(0, 1), 1, 1),  # Bas, pause
+                (pygame.math.Vector2(-1, 0), 2, 1),  # Gauche, pause
+                (pygame.math.Vector2(0, -1), 1, 1),  # Haut, pause
             ],
         )
         self.enemies.add(boss)
@@ -270,22 +284,24 @@ class EnemySpawner:
         # 4 minions qui tournent autour du boss
         radius = 150
         for i in range(4):
-            angle = (i / 4) * 2 * 3.14159
+            angle = (i / 4) * 2 * math.pi
             x = boss_x + radius * math.cos(angle)
             y = boss_y + radius * math.sin(angle)
 
-            # Instructions pour tourner autour du boss
+            # Instructions pour tourner autour du boss - utiliser des directions tangentielles
             instructions = []
-            for j in range(8):
-                next_angle = angle + (j + 1) * 3.14159 / 4
-                next_x = boss_x + radius * math.cos(next_angle)
-                next_y = boss_y + radius * math.sin(next_angle)
+            for j in range(8):  # 8 segments pour faire un cercle complet
+                # Direction tangentielle au cercle
+                angle_tangent = (
+                    angle + (j * math.pi / 4) + (math.pi / 2)
+                )  # + pi/2 pour avoir la tangente
+                direction = pygame.math.Vector2(
+                    math.cos(angle_tangent), math.sin(angle_tangent)
+                )
 
-                dx = next_x - x if j == 0 else next_x - prev_x
-                dy = next_y - y if j == 0 else next_y - prev_y
-                instructions.append((dx, -dy, 0.5))
-
-                prev_x, prev_y = next_x, next_y
+                instructions.append(
+                    (direction, 1, 0.5)  # Déplacement tangentiel, attendre 0.5s
+                )
 
             minion = Enemy(
                 x, y, self.screen, instructions=instructions, health=2, fire_rate=1000
@@ -307,19 +323,15 @@ class EnemySpawner:
 
             # Instructions de mouvement semi-aléatoires
             instructions = []
-            current_x, current_y = x, y
 
             for j in range(5):
-                # Nouvelle position cible
-                target_x = random.randint(100, self.screen_width - 100)
-                target_y = current_y + random.randint(100, 200)
+                # Direction aléatoire avec tendance vers le bas
+                dx = random.uniform(-1, 1)
+                dy = random.uniform(0.5, 1.5)  # Tendance vers le bas
+                direction = pygame.math.Vector2(dx, dy).normalize()
 
-                dx = target_x - current_x
-                dy = target_y - current_y
                 wait_time = random.uniform(0.3, 1.0)
-
-                instructions.append((dx, -dy, wait_time))
-                current_x, current_y = target_x, target_y
+                instructions.append((direction, 2, wait_time))
 
             enemy = Enemy(
                 x,
@@ -345,9 +357,9 @@ class EnemySpawner:
 
             # Mouvement: entrer par la gauche, avancer, attendre, attaquer vers la droite
             instructions = [
-                (300, 0, 1),  # Entrer dans l'écran
-                (self.screen_width // 4, 0, 2),  # Avancer un peu
-                (self.screen_width // 2, 200, 0),  # Attaquer en diagonale
+                (pygame.math.Vector2(1, 0), 3, 1),  # Entrer dans l'écran
+                (pygame.math.Vector2(1, 0), 2, 2),  # Avancer un peu, attendre
+                (pygame.math.Vector2(1, 1).normalize(), 3, 0),  # Attaquer en diagonale
             ]
 
             enemy = Enemy(left_start_x, y, self.screen, instructions=instructions)
@@ -362,9 +374,9 @@ class EnemySpawner:
 
             # Mouvement: entrer par la droite, avancer, attendre, attaquer vers la gauche
             instructions = [
-                (-300, 0, 1),  # Entrer dans l'écran
-                (-(self.screen_width // 4), 0, 2),  # Avancer un peu
-                (-(self.screen_width // 2), 200, 0),  # Attaquer en diagonale
+                (pygame.math.Vector2(-1, 0), 3, 1),  # Entrer dans l'écran
+                (pygame.math.Vector2(-1, 0), 2, 2),  # Avancer un peu, attendre
+                (pygame.math.Vector2(-1, 1).normalize(), 3, 0),  # Attaquer en diagonale
             ]
 
             enemy = Enemy(right_start_x, y, self.screen, instructions=instructions)
@@ -384,32 +396,31 @@ class EnemySpawner:
         for i in range(num_enemies):
             # Paramètres de la spirale
             radius = 50 + i * 20
-            angle = (i / 2) * 3.14159  # Demi-tour par ennemi
+            angle = (i / 2) * math.pi  # Demi-tour par ennemi
 
             x = center_x + radius * math.cos(angle)
             y = center_y
 
             # Instructions pour continuer la spirale
             instructions = []
-            current_x, current_y = x, y
+            current_angle = angle
 
             for j in range(10):  # 10 segments de spirale
-                next_angle = angle + (j + 1) * 3.14159 / 5  # 1/5 de tour
-                next_radius = radius + j * 10  # La spirale s'agrandit
-
-                next_x = center_x + next_radius * math.cos(next_angle)
-                next_y = center_y + j * 50  # Descendre progressivement
-
-                dx = next_x - current_x
-                dy = next_y - current_y
+                # Calcul de la direction tangentielle + un peu vers le bas
+                next_angle = current_angle + math.pi / 5  # 1/5 de tour
+                direction = pygame.math.Vector2(
+                    math.cos(next_angle + math.pi / 2),  # Tangente
+                    math.sin(next_angle + math.pi / 2)
+                    + 0.5,  # Tangente + tendance vers le bas
+                ).normalize()
 
                 instructions.append(
-                    (dx, -dy, 0.3)
+                    (direction, 2, 0.3)
                 )  # Attendre 0.3s entre chaque segment
-                current_x, current_y = next_x, next_y
+                current_angle = next_angle
 
             # Après la spirale, attaquer vers le bas
-            instructions.append((0, 400, 0))
+            instructions.append((pygame.math.Vector2(0, 1), 4, 0))
 
             enemy = Enemy(x, y, self.screen, instructions=instructions, fire_rate=800)
             self.enemies.add(enemy)
@@ -425,10 +436,13 @@ class EnemySpawner:
         for i in range(6):
             x = 100 + i * 150
             y = -50
+            # Direction aléatoire gauche ou droite pour la seconde instruction
+            random_dir = pygame.math.Vector2(random.choice([-1, 1]), 1).normalize()
+
             instructions = [
-                (0, 150, 1),
-                (random.choice([-100, 100]), 100, 0.5),
-                (0, 200, 0),
+                (pygame.math.Vector2(0, 1), 1.5, 1),  # Descendre, attendre
+                (random_dir, 1.5, 0.5),  # Diagonale aléatoire, attendre
+                (pygame.math.Vector2(0, 1), 2, 0),  # Continuer à descendre
             ]
             enemy = Enemy(x, y, self.screen, instructions=instructions, health=2)
             self.enemies.add(enemy)
@@ -438,11 +452,14 @@ class EnemySpawner:
         for i in range(4):
             x = -100
             y = 200 + i * 100
-            speed_multiplier = 2.0  # Plus rapide
 
             instructions = [
-                (self.screen_width + 200, 0, 0.5),
-                (-self.screen_width - 200, 0, 0),
+                (
+                    pygame.math.Vector2(1, 0),
+                    3,
+                    0.5,
+                ),  # Traversée rapide vers la droite, attendre
+                (pygame.math.Vector2(-1, 0), 3, 0),  # Retour rapide vers la gauche
             ]
 
             enemy = Enemy(x, y, self.screen, instructions=instructions, fire_rate=400)
@@ -458,10 +475,10 @@ class EnemySpawner:
         for i in range(3):
             boss_instructions.extend(
                 [
-                    (200, 0, 0.8),  # Droite
-                    (0, 100, 0.8),  # Bas
-                    (-200, 0, 0.8),  # Gauche
-                    (0, -100, 0.8),  # Haut
+                    (pygame.math.Vector2(1, 0), 2, 0.8),  # Droite, attendre
+                    (pygame.math.Vector2(0, 1), 1, 0.8),  # Bas, attendre
+                    (pygame.math.Vector2(-1, 0), 2, 0.8),  # Gauche, attendre
+                    (pygame.math.Vector2(0, -1), 1, 0.8),  # Haut, attendre
                 ]
             )
 
