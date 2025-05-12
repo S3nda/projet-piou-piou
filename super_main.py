@@ -1,8 +1,10 @@
+# main.py
+
 import pygame
 import sys
-from phase1.main_phase1 import Phase1
+from phase1.main import Phase1
 from phase2.main_phase2 import Phase2
-from menu.main_menu import MainMenu
+from menu.main_menu import MenuPrincipal
 from transition import Transition
 
 SCREEN_WIDTH = 1280
@@ -16,12 +18,13 @@ def main():
     clock = pygame.time.Clock()
 
     transition = Transition(screen, duration=1.5, color=(0, 0, 0))
-    current_phase = "phase2"
     transitioning = False
 
-    menu = MainMenu(screen)
+    menu = MenuPrincipal(screen)
     phase1 = Phase1(screen)
     phase2 = Phase2(screen)
+
+    current_phase = "menu"
 
     while True:
         for event in pygame.event.get():
@@ -36,19 +39,19 @@ def main():
                 result = menu.run()
                 if result == "phase1":
                     transitioning = True
-                    current_phase = 1
+                    current_phase = "phase1"
                     transition.start()
-            elif current_phase == 2:
+            elif current_phase == "phase2":
                 result = phase2.run()
                 if result == "phase1":
                     transitioning = True
-                    current_phase = 1
+                    current_phase = "phase1"
                     transition.start()
-            elif current_phase == 1:
+            elif current_phase == "phase1":
                 result = phase1.run()
                 if result == "phase2":
                     transitioning = True
-                    current_phase = 2
+                    current_phase = "phase2"
                     transition.start()
 
         if transitioning:
@@ -58,7 +61,6 @@ def main():
 
         pygame.display.flip()
         clock.tick(60)
-
 
 if __name__ == "__main__":
     main()
