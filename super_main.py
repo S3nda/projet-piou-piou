@@ -11,6 +11,7 @@ SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 BG_COLOR = (30, 30, 30)
 
+
 def main():
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -61,6 +62,7 @@ def main():
 
         pygame.display.flip()
         clock.tick(60)
+
 
 if __name__ == "__main__":
     main()

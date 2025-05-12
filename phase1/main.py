@@ -2,7 +2,6 @@ import pygame
 from phase1.player import Player
 from phase1.rockspawner import RockSpawner
 from phase1.enemy_spawner import EnemySpawner
-from phase1.gui.health_bar import HealthBar
 import os
 
 ### GLOBAL VAR ###
@@ -18,7 +17,7 @@ class Phase1:
     def __init__(self, screen):
         self.screen = screen
         self.width, self.height = screen.get_size()
-        bg_path = os.path.join(ASSETS_DIR, "bg1.png")
+        bg_path = os.path.join(ASSETS_DIR, "bg.png")
         self.background = pygame.image.load(bg_path).convert()
         self.background = pygame.transform.scale(
             self.background, (self.width, self.height)
@@ -27,7 +26,9 @@ class Phase1:
         self.rock_group = pygame.sprite.Group()
         self.rock_spawner = RockSpawner(screen, self.rock_group)
         self.spawner = EnemySpawner(screen)
-        self.health_bar = HealthBar(self.player)
+
+        # Score du joueur
+        self.score = 0
 
         # Variables pour le système de vagues
         self.current_wave = 0
@@ -54,7 +55,6 @@ class Phase1:
             # Gestion des transitions entre les vagues
             if self.wave_completed:
                 if self.current_wave >= self.max_waves:
-                    # Toutes les vagues sont terminées, passons à la phase 2
                     return "phase 2"
 
                 self.wave_transition_timer += dt
@@ -81,11 +81,31 @@ class Phase1:
             self.spawner.update(dt)
             self.spawner.draw(self.screen)
 
-            self.health_bar.update()
+            # Affichage de la barre de vie
+            position = (50, 50)
+            if self.player.hp >= 3:
+                image_hp = pygame.image.load("assets/Healthbar_3.png").convert_alpha()
+            elif self.player.hp == 2:
+                image_hp = pygame.image.load("assets/Healthbar_2.png").convert_alpha()
+            elif self.player.hp == 1:
+                image_hp = pygame.image.load("assets/Healthbar_1.png").convert_alpha()
+            else:
+                image_hp = pygame.image.load("assets/Healthbar_0.png").convert_alpha()
+
+            self.screen.blit(image_hp, position)
+
+            # Affichage du score
+            score_text = self.small_font.render(
+                f"Score: {self.score}", True, (255, 255, 255)
+            )
+            self.screen.blit(score_text, (300, 200))
 
             # Fonction qui vérifie les collisions
-            if self.got_hit():
+            if self.player_got_hit():
                 self.player.hp -= 1
+
+            if self.enemy_got_hit():
+                self.score += 100
 
             # Affichage du numéro de vague
             if self.wave_completed and self.current_wave < self.max_waves:
@@ -114,7 +134,7 @@ class Phase1:
                 wave_text = self.small_font.render(
                     f"Vague {self.current_wave}/{self.max_waves}", True, (200, 200, 255)
                 )
-                self.screen.blit(wave_text, (50, 50))
+                self.screen.blit(wave_text, (200, 50))
 
             pygame.display.flip()
 
@@ -152,9 +172,9 @@ class Phase1:
                         if event.type == pygame.QUIT:
                             return "quit"
                         if event.type == pygame.KEYDOWN:
-                            return "restart"  # On peut retourner "restart" pour recommencer la phase 1
+                            return "restart"
 
-    def got_hit(self):
+    def player_got_hit(self):
         for enemy in self.spawner.enemies:
             if pygame.sprite.collide_rect(self.player, enemy):
                 if DEBUG:
@@ -167,3 +187,13 @@ class Phase1:
             if pygame.sprite.collide_rect(self.player, rock):
                 return True
         return False
+
+    def enemy_got_hit(self):
+        hit = False
+        for enemy in self.spawner.enemies:
+            for bullet in self.player.bullets:
+                if pygame.sprite.collide_rect(enemy, bullet):
+                    enemy.die()
+                    self.player.bullets.remove(bullet)
+                    hit = True
+        return hit

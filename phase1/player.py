@@ -1,7 +1,6 @@
 import pygame
 import os
 from phase1.bullet import PlayerBullet
-from phase1.bullet import EnemyBullet
 from phase1.starship import Starship
 
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "..", "assets")

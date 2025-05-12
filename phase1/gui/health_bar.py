@@ -4,6 +4,7 @@ import os
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "../..", "assets")
 DEBUG = True
 
+
 class HealthBar(pygame.sprite.Sprite):
     def __init__(self, player, position=(50, 50)):
         super().__init__()
@@ -27,5 +28,10 @@ class HealthBar(pygame.sprite.Sprite):
             img_file = "Healthbar_0.png"
 
         # Chargement de l'image
-        self.image = pygame.image.load(os.path.join(ASSETS_DIR, img_file)).convert_alpha()
+        self.image = pygame.image.load(
+            os.path.join(ASSETS_DIR, img_file)
+        ).convert_alpha()
         self.rect = self.image.get_rect(topleft=self.position)
+
+    def draw(self):
+        return
